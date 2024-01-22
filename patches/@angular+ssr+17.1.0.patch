@@ -1,0 +1,29 @@
+diff --git a/node_modules/@angular/ssr/fesm2022/ssr.mjs b/node_modules/@angular/ssr/fesm2022/ssr.mjs
+index c872647..101a618 100755
+--- a/node_modules/@angular/ssr/fesm2022/ssr.mjs
++++ b/node_modules/@angular/ssr/fesm2022/ssr.mjs
+@@ -228,6 +228,7 @@ class CommonEngine {
+         this.inlineCriticalCssProcessor = new InlineCriticalCssProcessor({
+             minify: false,
+         });
++        this.cache = new Map();
+     }
+     /**
+      * Render an HTML document for a specific URL with specified
+@@ -272,8 +273,14 @@ class CommonEngine {
+         // See: https://portswigger.net/web-security/file-path-traversal
+         const pagePath = join(publicPath, pathname, 'index.html');
+         if (this.pageIsSSG.get(pagePath)) {
+-            // Serve pre-rendered page.
+-            return fs.promises.readFile(pagePath, 'utf-8');
++            if (this.cache.has(pagePath)) {
++                return this.cache.get(pagePath);
++            } else {
++                // Serve pre-rendered page.
++                const content = await fs.promises.readFile(pagePath, 'utf-8');
++                this.cache.set(pagePath, content);
++                return content;
++            }
+         }
+         if (!pagePath.startsWith(normalize(publicPath))) {
+             // Potential path traversal detected.

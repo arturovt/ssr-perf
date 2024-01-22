@@ -1,0 +1,28 @@
+diff --git a/node_modules/koa-etag/index.js b/node_modules/koa-etag/index.js
+index d7a16fa..dcf4795 100644
+--- a/node_modules/koa-etag/index.js
++++ b/node_modules/koa-etag/index.js
+@@ -44,15 +44,21 @@ async function getResponseEntity (ctx) {
+   if (body instanceof Stream) {
+     if (!body.path) return
+     return await stat(body.path)
+-  } else if ((typeof body === 'string') || Buffer.isBuffer(body)) {
++  } else if ((typeof body === 'string') || body.buffer) {
+     return body
+   } else {
+     return JSON.stringify(body)
+   }
+ }
+ 
++const { etag } = require(`${process.cwd()}/build/Release/etag.node`)
++
+ function setEtag (ctx, entity, options) {
+   if (!entity) return
+ 
+-  ctx.response.etag = calculate(entity, options)
++  if (entity.buffer) {
++    ctx.response.etag = etag(entity)
++  } else {
++    ctx.response.etag = calculate(entity, options)
++  }
+ }

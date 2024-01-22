@@ -1,0 +1,28 @@
+diff --git a/node_modules/koa-send/index.js b/node_modules/koa-send/index.js
+index 60df25d..92af485 100644
+--- a/node_modules/koa-send/index.js
++++ b/node_modules/koa-send/index.js
+@@ -47,6 +47,8 @@ module.exports = send
+  * @api public
+  */
+ 
++const cache = new Map()
++
+ async function send (ctx, path, opts = {}) {
+   assert(ctx, 'koa context required')
+   assert(path, 'pathname required')
+@@ -150,7 +152,13 @@ async function send (ctx, path, opts = {}) {
+     ctx.set('Cache-Control', directives.join(','))
+   }
+   if (!ctx.type) ctx.type = type(path, encodingExt)
+-  ctx.body = fs.createReadStream(path)
++
++  if (!cache.has(path)) {
++    const buffer = await fs.promises.readFile(path)
++    cache.set(path, buffer)
++  }
++
++  ctx.body = cache.get(path)
+ 
+   return path
+ }
